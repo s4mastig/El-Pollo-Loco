@@ -1,9 +1,54 @@
 body {
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+    /* background-image: url('img/background.png'); */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    font-family: 'cactus', Arial, Helvetica, sans-serif;
+    color: rgb(228,146,0);
 }
 
 canvas {
-    background-color: black;
+    border: 5px solid red;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    display: block;
+}
+
+@font-face {
+    font-family: 'zabras';
+    src: url('fonts/zabars.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'cactus';
+    font-weight: bold;
+    src: url('fonts/cactus-regular.otf') format("opentype");
+}
+
+h1 {
+    font-size: 64px;
+    letter-spacing: 3px;
+    text-shadow: 3px 3px 4px #000000;
+}
+
+/* smartphones */
+@media only screen and (max-width: 720px) {
+    canvas {
+        width: 100%;
+    }
+}
+
+/* smartphones */
+@media only screen and (max-height: 480px) {
+    canvas {
+        height: 100vh;
+    }
+    h1 {
+        display: none;
+    }
 }

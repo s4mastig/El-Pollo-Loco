@@ -13,7 +13,11 @@ class DrawableObject {
     }
 
     draw(ctx) {
+        try {
         ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
+        } catch(e) { 
+            console.log('could not load image', this.img.src);
+        }
     }
 
     loadImages(array) {
