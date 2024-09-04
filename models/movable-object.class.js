@@ -8,6 +8,13 @@ class MovableObject extends DrawableObject {
     lastIdleTime = 0;
     sleepThreshold = 7000;
 
+    offset = {
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0
+    }
+
     applyGravity() {
         setInterval(() => {
             if (this.isAboveGround() || this.speedY > 0) {
@@ -30,18 +37,20 @@ class MovableObject extends DrawableObject {
     }
 
     isColliding(mo) {
-        return this.x + this.width > mo.x &&
-            this.y + this.height > mo.y &&
-            this.x < mo.x + mo.width &&
-            this.y < mo.y + mo.height;
+        return this.x + this.width - this.offset.right > mo.x + mo.offset.left &&
+            this.y + this.height - this.offset.bottom > mo.y + mo.offset.top &&
+            this.x + this.offset.left < mo.x + mo.width - mo.offset.right &&
+            this.y + this.offset.top < mo.y + mo.height - mo.offset.bottom;
     }
 
     hit() {
-        this.energy -= 5;
-        if (this.energy < 0) {
-            this.energy = 0;
-        } else {
-            this.lastHit = new Date().getTime();
+        if (!this.isInvulnerable()) {
+            this.energy -= 5;
+            if (this.energy < 0) {
+                this.energy = 0;
+            } else {
+                this.lastHit = new Date().getTime();
+            }
         }
     }
 
@@ -51,12 +60,18 @@ class MovableObject extends DrawableObject {
         return timePassed < 1; // only if timePassed < 5s isHurt = true;
     }
 
+    isInvulnerable() {
+        let timePassed = new Date().getTime() - this.lastHit; // Unterschied in ms
+        timePassed = timePassed / 1000; // Unterschied in s
+        return timePassed < 0.2; // nur wenn timePassed < 1s ist invulnerable = true;
+    }
+
     isDead() {
         return this.energy == 0;
     }
 
     isIdle() {
-        return !this.world.keyboard.RIGHT && !this.world.keyboard.LEFT && !this.world.keyboard.SPACE;
+        return !this.world.keyboard.RIGHT && !this.world.keyboard.LEFT && !this.world.keyboard.SPACE && !this.world.keyboard.D;
     }
 
     isSleeping() {
@@ -91,5 +106,10 @@ class MovableObject extends DrawableObject {
 
     jump() {
         this.speedY = 30;
+    }
+
+    removeFromWorld() {
+        let index = this.world.level.enemies.indexOf(this);
+        this.world.level.enemies.splice(index, 1);
     }
 }

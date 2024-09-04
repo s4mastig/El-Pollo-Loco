@@ -5,6 +5,14 @@ class Character extends MovableObject {
     y = 128;
     world;
     speed = 10;
+    
+    offset = {
+        top: 120,
+        bottom: 30,
+        left: 40,
+        right: 40
+    }
+
     IMAGES_WALKING = [
         'img/2_character_pepe/2_walk/W-21.png',
         'img/2_character_pepe/2_walk/W-22.png',
@@ -126,5 +134,13 @@ class Character extends MovableObject {
                 this.playAnimation(this.IMAGES_IDLE);
             }
         }, 200);
+    }
+
+    isAboveEnemy(enemy) {
+        return this.y + this.height > enemy.y &&
+            this.y + this.height <= enemy.y + enemy.height &&
+            this.x + this.width > enemy.x &&
+            this.x < enemy.x + enemy.width && 
+            this.speedY < 0;
     }
 }

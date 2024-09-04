@@ -20,17 +20,21 @@ class World {
 
     setWorld() {
         this.character.world = this;
+        this.throwableObjects.forEach(obj => obj.world = this);
+        this.level.enemies.forEach(enemy => enemy.world = this);
     }
 
     run() {
         setInterval(() => {
             this.checkCollisions();
+        }, 50);
+        setInterval(() => {
             this.checkThrowObjects();
-        }, 200);
+        }, 150);
     }
 
     checkThrowObjects() {
-        if(this.keyboard.D) {
+        if (this.keyboard.D) {
             let bottle = new ThrowableObject(this.character.x + 100, this.character.y + 100);
             this.throwableObjects.push(bottle);
         }
@@ -38,12 +42,23 @@ class World {
 
     checkCollisions() {
         this.level.enemies.forEach((enemy) => {
-            if(this.character.isColliding(enemy)) {
-                this.character.hit(); 
-                console.log('collision with character, energy', this.character.energy);
-                this.statusBar.setPercentage(this.character.energy);
+            if (this.character.isColliding(enemy) && !enemy.isDead()) {
+                if (this.character.isAboveEnemy(enemy) && !enemy == this.endboss) {
+                    enemy.energy = 0;
+                    console.log('Enemy energy after collision:', enemy.energy); // Debugging
+                    console.log('Is enemy dead?:', enemy.isDead()); // Debugging
+                } else if (!enemy.isDead() && !this.character.isInvulnerable()) {
+                    this.character.hit();
+                    console.log('collision with character, energy', this.character.energy);
+                    this.statusBar.setPercentage(this.character.energy);
+                }
             }
-        });
+            this.throwableObjects.forEach((bottle) => {  // Überprüfe jede Flasche auf Kollision
+                if (bottle.isColliding(enemy)) {
+                    enemy.hit(); // Huhn als getroffen markieren
+                }
+            });
+        })
     }
 
     draw() {
@@ -83,6 +98,7 @@ class World {
 
         mo.draw(this.ctx);
         mo.drawFrame(this.ctx);
+        mo.drawFrameOffset(this.ctx);
 
         if (mo.otherDirection) {
             this.flipImageBack(mo);

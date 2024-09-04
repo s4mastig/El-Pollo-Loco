@@ -29,7 +29,7 @@ class DrawableObject {
     }
 
     drawFrame(ctx) {
-        if (this instanceof Character || this instanceof Chicken || this instanceof Endboss) {
+        if (this instanceof Character || this instanceof Chicken || this instanceof Endboss || this instanceof ThrowableObject) {
             ctx.beginPath();
             ctx.lineWidth = '10';
             ctx.strokeStyle = 'blue';
@@ -38,4 +38,21 @@ class DrawableObject {
         }
     }
 
+    drawFrameOffset(ctx) {
+        if (this instanceof Character || this instanceof Chicken || this instanceof Endboss || this instanceof ThrowableObject) {
+            ctx.beginPath();
+            ctx.lineWidth = '2'; // Anpassung der Linienstärke für eine präzisere Darstellung
+            ctx.strokeStyle = 'red';
+    
+            // Berechne die Position und Größe des Rechtecks unter Berücksichtigung des Offsets
+            const offsetX = this.x + this.offset.left;
+            const offsetY = this.y + this.offset.top;
+            const offsetWidth = this.width - this.offset.left - this.offset.right;
+            const offsetHeight = this.height - this.offset.top - this.offset.bottom;
+    
+            // Zeichne das Rechteck mit den berechneten Werten
+            ctx.rect(offsetX, offsetY, offsetWidth, offsetHeight);
+            ctx.stroke();
+        }
+    }
 }
