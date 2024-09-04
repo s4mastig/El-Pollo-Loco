@@ -7,6 +7,7 @@ class MovableObject extends DrawableObject {
     lastHit = 0;
     lastIdleTime = 0;
     sleepThreshold = 7000;
+    listOfObjects;
 
     offset = {
         top: 0,
@@ -108,8 +109,9 @@ class MovableObject extends DrawableObject {
         this.speedY = 30;
     }
 
-    removeFromWorld() {
-        let index = this.world.level.enemies.indexOf(this);
-        this.world.level.enemies.splice(index, 1);
+    removeFromWorld(listOfObjects) {
+        this.listOfObjects = listOfObjects;
+        let index = listOfObjects.indexOf(this);
+        this.listOfObjects.splice(index, 1);
     }
 }

@@ -53,7 +53,7 @@ class Chicken extends MovableObject {
                 if (!this.hasBeenRemoved) {
                     this.hasBeenRemoved = true;
                     setTimeout(() => {
-                        this.removeFromWorld();
+                        this.removeFromWorld(this.world.level.enemies);
                     }, 1000);
                 }
             }

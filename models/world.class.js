@@ -7,6 +7,7 @@ class World {
     keyboard;
     camera_x = 0;
     statusBar = new StatusBar();
+    statusBarCoins = new StatusBarCoins();
     throwableObjects = [];
 
     constructor(canvas, keyboard) {
@@ -22,6 +23,7 @@ class World {
         this.character.world = this;
         this.throwableObjects.forEach(obj => obj.world = this);
         this.level.enemies.forEach(enemy => enemy.world = this);
+        this.level.coins.forEach(coin => coin.world = this);
     }
 
     run() {
@@ -59,6 +61,15 @@ class World {
                 }
             });
         })
+        // **Neuer Block für die Münzen**
+        this.level.coins.forEach((coin) => {
+            if (this.character.isColliding(coin)) {
+                if (coin.collect()) { // Münze einsammeln
+                    console.log('Coin collected!');
+                    // Hier kannst du andere Logik hinzufügen, wenn nötig
+                }
+            }
+        });
     }
 
     draw() {
@@ -68,9 +79,11 @@ class World {
 
         this.addObjectsToMap(this.level.backgroundObjects);
         this.addObjectsToMap(this.level.clouds);
+        this.addObjectsToMap(this.level.coins);
         this.ctx.translate(-this.camera_x, 0)
         // space for fixed objects
         this.addToMap(this.statusBar);
+        this.addToMap(this.statusBarCoins);
         this.ctx.translate(this.camera_x, 0)
         this.addToMap(this.character);
         this.addObjectsToMap(this.level.enemies);
