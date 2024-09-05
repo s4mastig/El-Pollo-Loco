@@ -4,13 +4,14 @@ class Coin extends MovableObject {
     width = 100; 
     height = 100;
     isCollected = false;
-
+    
     offset = {
-        top: 5,
-        bottom: 5,
-        left: 5,
-        right: 5
+        top: 30,
+        bottom: 30,
+        left: 30,
+        right: 30
     }
+
 
     IMAGES_COIN = [
         'img/8_coin/coin_1.png'
@@ -29,14 +30,5 @@ class Coin extends MovableObject {
         this.y = heights[Math.floor(Math.random() * heights.length)];
         // Wähle zufällig eine X-Position innerhalb des Levels
         this.x = Math.floor(Math.random() * (2500 - this.width)); // 2500 ist die Breite des Levels, und width ist die Breite der Münze
-    }
-
-    collect() {
-        if (!this.isCollected) {
-            this.isCollected = true;
-            this.removeFromWorld(this.world.level.coins);
-            return true;
-        }
-        return false;
     }
 }

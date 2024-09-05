@@ -8,7 +8,14 @@ class World {
     camera_x = 0;
     statusBar = new StatusBar();
     statusBarCoins = new StatusBarCoins();
+    statusBarBottles = new StatusBarBottles();
     throwableObjects = [];
+    collectedCoins = 0;
+    collectedBottles = 0;
+    isAboveEnemyState = false;
+    throwDelay = 500; // Zeit in Millisekunden, die vergehen muss, bevor eine neue Flasche geworfen werden kann
+    lastThrowTime = 0;
+
 
     constructor(canvas, keyboard) {
         this.ctx = canvas.getContext('2d');
@@ -36,22 +43,33 @@ class World {
     }
 
     checkThrowObjects() {
-        if (this.keyboard.D) {
-            let bottle = new ThrowableObject(this.character.x + 100, this.character.y + 100);
+        let now = Date.now();
+        if (this.keyboard.D && this.collectedBottles > 0) {
+            if (now - this.lastThrowTime >= this.throwDelay) {
+            let direction = this.character.otherDirection ? -1 : 1;
+            let startPoint = this.character.otherDirection ? 0 : 100;
+            let bottle = new ThrowableObject(this.character.x + startPoint, this.character.y + 100, direction);
             this.throwableObjects.push(bottle);
+            this.statusBarBottles.setBottleAmount(this.collectedBottles);
+            this.collectedBottles--;
+            this.lastThrowTime = now;
+            }
         }
     }
 
     checkCollisions() {
         this.level.enemies.forEach((enemy) => {
             if (this.character.isColliding(enemy) && !enemy.isDead()) {
-                if (this.character.isAboveEnemy(enemy) && !enemy == this.endboss) {
+                if (this.character.isAboveEnemy(enemy) && !(enemy instanceof Endboss)) {
+                    this.character.setAboveEnemyState(true);
                     enemy.energy = 0;
+                    this.character.smallJump();
                     console.log('Enemy energy after collision:', enemy.energy); // Debugging
                     console.log('Is enemy dead?:', enemy.isDead()); // Debugging
-                } else if (!enemy.isDead() && !this.character.isInvulnerable()) {
+                    return;
+                } else if (!this.character.isAboveEnemyState && !enemy.isDead() && !this.character.isInvulnerable()) {
                     this.character.hit();
-                    console.log('collision with character, energy', this.character.energy);
+                    console.log('character hit, energy =', this.character.energy);
                     this.statusBar.setPercentage(this.character.energy);
                 }
             }
@@ -62,11 +80,25 @@ class World {
             });
         })
         // **Neuer Block für die Münzen**
-        this.level.coins.forEach((coin) => {
-            if (this.character.isColliding(coin)) {
-                if (coin.collect()) { // Münze einsammeln
-                    console.log('Coin collected!');
-                    // Hier kannst du andere Logik hinzufügen, wenn nötig
+        this.handleCollectibles(this.level.coins, 'Coin');
+        this.handleCollectibles(this.level.bottles, 'Bottle');
+    }
+
+    handleCollectibles(collectibles, collectibleType) {
+        collectibles.forEach((collectible) => {
+            if (this.character.isColliding(collectible)) {
+                console.log('Checking collision with bottle at', collectible.x, collectible.y);
+                if (collectible.collect(collectibles)) { // Übergibt das Array an collect()
+                    console.log(`${collectibleType} collected!`);
+                    
+                    // Unterscheidet zwischen Münzen und Flaschen
+                    if (collectibleType === 'Coin') {
+                        this.collectedCoins++; // Zähle eingesammelte Münzen
+                        this.statusBarCoins.setCoinAmount(this.collectedCoins);
+                    } else if (collectibleType === 'Bottle') {
+                        this.collectedBottles++; // Zähle eingesammelte Flaschen
+                        this.statusBarBottles.setBottleAmount(this.collectedBottles);
+                    }
                 }
             }
         });
@@ -80,10 +112,12 @@ class World {
         this.addObjectsToMap(this.level.backgroundObjects);
         this.addObjectsToMap(this.level.clouds);
         this.addObjectsToMap(this.level.coins);
+        this.addObjectsToMap(this.level.bottles);
         this.ctx.translate(-this.camera_x, 0)
         // space for fixed objects
         this.addToMap(this.statusBar);
         this.addToMap(this.statusBarCoins);
+        this.addToMap(this.statusBarBottles);
         this.ctx.translate(this.camera_x, 0)
         this.addToMap(this.character);
         this.addObjectsToMap(this.level.enemies);

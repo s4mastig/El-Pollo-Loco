@@ -39,7 +39,7 @@ class DrawableObject {
     }
 
     drawFrameOffset(ctx) {
-        if (this instanceof Character || this instanceof Chicken || this instanceof Endboss || this instanceof ThrowableObject) {
+        if (this instanceof Character || this instanceof Chicken || this instanceof Endboss || this instanceof ThrowableObject || this instanceof Coin) {
             ctx.beginPath();
             ctx.lineWidth = '2'; // Anpassung der Linienstärke für eine präzisere Darstellung
             ctx.strokeStyle = 'red';

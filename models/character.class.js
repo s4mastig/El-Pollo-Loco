@@ -5,10 +5,15 @@ class Character extends MovableObject {
     y = 128;
     world;
     speed = 10;
-    
+
+    jumpingAnimationStarted = false;
+    jumpingAnimationCompleted = false;
+    canJump = true;
+
+
     offset = {
         top: 120,
-        bottom: 30,
+        bottom: 0,
         left: 40,
         right: 40
     }
@@ -23,11 +28,8 @@ class Character extends MovableObject {
     ];
 
     IMAGES_JUMPING = [
-        'img/2_character_pepe/3_jump/J-31.png',
-        'img/2_character_pepe/3_jump/J-32.png',
-        'img/2_character_pepe/3_jump/J-33.png',
         'img/2_character_pepe/3_jump/J-34.png',
-        'img/2_character_pepe/3_jump/J-35.png',
+        'img/2_character_pepe/3_jump/J-34.png',
         'img/2_character_pepe/3_jump/J-36.png',
         'img/2_character_pepe/3_jump/J-37.png',
         'img/2_character_pepe/3_jump/J-38.png',
@@ -106,8 +108,15 @@ class Character extends MovableObject {
                 this.walking_sound.play();
             }
 
-            if (this.world.keyboard.SPACE && !this.isAboveGround()) {
+            if (this.world.keyboard.SPACE && !this.isAboveGround() && this.canJump) {
+                this.currentImage = 0;
                 this.jump();
+                this.jumpingAnimationStarted = true;
+                this.jumpingAnimationCompleted = false;
+                this.canJump = false;
+                setTimeout(() => {
+                    this.canJump = true;
+                }, 1500);
             }
 
             this.world.camera_x = -this.x + 100;
@@ -118,19 +127,36 @@ class Character extends MovableObject {
                 this.playAnimation(this.IMAGES_DEAD);
             } else if (this.isHurt()) {
                 this.playAnimation(this.IMAGES_HURT);
-            } else if (this.isAboveGround()) {
-                this.playAnimation(this.IMAGES_JUMPING);
             } else {
                 if (this.world.keyboard.RIGHT || this.world.keyboard.LEFT) {
-                    this.playAnimation(this.IMAGES_WALKING);
+                    if (!this.isAboveGround()) {
+                        this.playAnimation(this.IMAGES_WALKING);
+                    }
                 }
             }
         }, 50);
 
         setInterval(() => {
+            if (this.isSmallJumping) {
+                this.playAnimation(this.IMAGES_JUMPING.slice(2));
+                this.isSmallJumping = false;
+                console.log('Playing small JUMPING animation')
+            } else if (this.jumpingAnimationStarted && !this.jumpingAnimationCompleted && !this.isHurt()) {
+                console.log('Playing JUMPING animation');
+                this.playAnimation(this.IMAGES_JUMPING);
+                if (!this.isAboveGround()) {
+                    this.jumpingAnimationCompleted = true;
+                    this.jumpingAnimationStarted = false;
+                }
+            }
+        }, 200);
+
+
+        setInterval(() => {
             if (this.isSleeping()) {
                 this.playAnimation(this.IMAGES_SLEEP);
-            } else if (this.isIdle()) {
+            } else if (this.isIdle() && !this.isAboveGround()) {
+                console.log('Playing IDLE animation');
                 this.playAnimation(this.IMAGES_IDLE);
             }
         }, 200);
@@ -140,7 +166,11 @@ class Character extends MovableObject {
         return this.y + this.height > enemy.y &&
             this.y + this.height <= enemy.y + enemy.height &&
             this.x + this.width > enemy.x &&
-            this.x < enemy.x + enemy.width && 
+            this.x < enemy.x + enemy.width &&
             this.speedY < 0;
+    }
+
+    setAboveEnemyState(value) {
+        this.isAboveEnemyState = value;
     }
 }

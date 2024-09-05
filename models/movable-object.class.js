@@ -109,9 +109,26 @@ class MovableObject extends DrawableObject {
         this.speedY = 30;
     }
 
+    smallJump() {
+
+    this.speedY = 15; // Oder ein anderer Wert für den kleinen Sprung
+    setTimeout(() => {
+        this.setAboveEnemyState(false); // Flagge zurücksetzen
+    }, 500); // Oder eine andere Dauer für den kleinen Spru
+    }
+
     removeFromWorld(listOfObjects) {
         this.listOfObjects = listOfObjects;
         let index = listOfObjects.indexOf(this);
         this.listOfObjects.splice(index, 1);
+    }
+
+    collect(listOfCollectibles) {
+        if (!this.isCollected) {
+            this.isCollected = true;
+            this.removeFromWorld(listOfCollectibles); // Entfernt das Objekt aus der entsprechenden Liste
+            return true; // Sammelobjekt wurde erfolgreich eingesammelt
+        }
+        return false; // Sammelobjekt war bereits eingesammelt
     }
 }
