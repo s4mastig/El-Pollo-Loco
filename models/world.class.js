@@ -15,6 +15,7 @@ class World {
     isAboveEnemyState = false;
     throwDelay = 500; // Zeit in Millisekunden, die vergehen muss, bevor eine neue Flasche geworfen werden kann
     lastThrowTime = 0;
+    
 
 
     constructor(canvas, keyboard) {
@@ -59,6 +60,14 @@ class World {
 
     checkCollisions() {
         this.level.enemies.forEach((enemy) => {
+            if (enemy instanceof Endboss && this.character.firstMetEndboss == false) {
+                let distance = Math.abs(this.character.x - enemy.x);
+                if (distance < 400) { // Beispielwert für die Distanz, passe diesen nach Bedarf an
+                    this.character.blockMovement(5000);
+                    enemy.animate();
+                    this.character.firstMetEndboss = true;
+                }
+            }
             if (this.character.isColliding(enemy) && !enemy.isDead()) {
                 if (this.character.isAboveEnemy(enemy) && !(enemy instanceof Endboss)) {
                     this.character.setAboveEnemyState(true);

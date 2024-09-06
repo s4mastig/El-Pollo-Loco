@@ -16,25 +16,25 @@ class MovableObject extends DrawableObject {
         left: 0
     }
 
-    applyGravity() {
+    applyGravity(groundY) {
         setInterval(() => {
-            if (this.isAboveGround() || this.speedY > 0) {
+            if (this.isAboveGround(groundY) || this.speedY > 0) {
                 this.y -= this.speedY;
                 this.speedY -= this.acceleration;
             }
 
-            if (!this.isAboveGround()) {
-                this.y = 128;  // Setzt y direkt auf 128, wenn der Charakter den Boden erreicht
+            if (!this.isAboveGround(groundY)) {
+                this.y = groundY;  // Setzt y direkt auf 128, wenn der Charakter den Boden erreicht
                 this.speedY = 0;  // Stoppt die vertikale Bewegung
             }
         }, 1000 / 25);
     }
 
-    isAboveGround() {
+    isAboveGround(groundY) {
         if (this instanceof ThrowableObject) {
             return true;
         }
-        return this.y < 128;
+        return this.y < groundY;
     }
 
     isColliding(mo) {

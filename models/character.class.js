@@ -9,6 +9,8 @@ class Character extends MovableObject {
     jumpingAnimationStarted = false;
     jumpingAnimationCompleted = false;
     canJump = true;
+    isMovementBlocked = false;
+    firstMetEndboss = false;
 
 
     offset = {
@@ -89,26 +91,26 @@ class Character extends MovableObject {
         this.loadImages(this.IMAGES_HURT);
         this.loadImages(this.IMAGES_IDLE);
         this.loadImages(this.IMAGES_SLEEP);
-        this.applyGravity();
+        this.applyGravity(128);
         this.animate();
     }
 
     animate() {
         setInterval(() => {
             this.walking_sound.pause();
-            if (this.world.keyboard.RIGHT && this.x < this.world.level.level_end_x) {
+            if (this.world.keyboard.RIGHT && this.x < this.world.level.level_end_x && !this.isMovementBlocked) {
                 this.moveRight();
                 this.otherDirection = false;
                 this.walking_sound.play();
             }
 
-            if (this.world.keyboard.LEFT && this.x > 0) {
+            if (this.world.keyboard.LEFT && this.x > 0 && !this.isMovementBlocked) {
                 this.moveLeft();
                 this.otherDirection = true;
                 this.walking_sound.play();
             }
 
-            if (this.world.keyboard.SPACE && !this.isAboveGround() && this.canJump) {
+            if (this.world.keyboard.SPACE && !this.isAboveGround(128) && this.canJump && !this.isMovementBlocked) {
                 this.currentImage = 0;
                 this.jump();
                 this.jumpingAnimationStarted = true;
@@ -128,8 +130,8 @@ class Character extends MovableObject {
             } else if (this.isHurt()) {
                 this.playAnimation(this.IMAGES_HURT);
             } else {
-                if (this.world.keyboard.RIGHT || this.world.keyboard.LEFT) {
-                    if (!this.isAboveGround()) {
+                if ((this.world.keyboard.RIGHT || this.world.keyboard.LEFT) && !this.isMovementBlocked) {
+                    if (!this.isAboveGround(128)) {
                         this.playAnimation(this.IMAGES_WALKING);
                     }
                 }
@@ -141,10 +143,10 @@ class Character extends MovableObject {
                 this.playAnimation(this.IMAGES_JUMPING.slice(2));
                 this.isSmallJumping = false;
                 console.log('Playing small JUMPING animation')
-            } else if (this.jumpingAnimationStarted && !this.jumpingAnimationCompleted && !this.isHurt()) {
+            } else if (this.jumpingAnimationStarted && !this.jumpingAnimationCompleted && !this.isHurt() && !this.isMovementBlocked) {
                 console.log('Playing JUMPING animation');
                 this.playAnimation(this.IMAGES_JUMPING);
-                if (!this.isAboveGround()) {
+                if (!this.isAboveGround(128)) {
                     this.jumpingAnimationCompleted = true;
                     this.jumpingAnimationStarted = false;
                 }
@@ -155,7 +157,7 @@ class Character extends MovableObject {
         setInterval(() => {
             if (this.isSleeping()) {
                 this.playAnimation(this.IMAGES_SLEEP);
-            } else if (this.isIdle() && !this.isAboveGround()) {
+            } else if (this.isIdle() && !this.isAboveGround(128)) {
                 console.log('Playing IDLE animation');
                 this.playAnimation(this.IMAGES_IDLE);
             }
@@ -172,5 +174,14 @@ class Character extends MovableObject {
 
     setAboveEnemyState(value) {
         this.isAboveEnemyState = value;
+    }
+
+    blockMovement(duration) {
+        this.isMovementBlocked = true; // Bewegung blockieren
+
+        // Bewegung nach einer bestimmten Zeitspanne wieder freigeben
+        setTimeout(() => {
+            this.isMovementBlocked = false;
+        }, duration);
     }
 }
