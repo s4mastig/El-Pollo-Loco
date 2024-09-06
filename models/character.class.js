@@ -6,11 +6,17 @@ class Character extends MovableObject {
     world;
     speed = 10;
 
+    cameraOffset = 100; // Standard Offset
+    cameraSpeed = 0.01; // Geschwindigkeit der Kamerabewegung
+
     jumpingAnimationStarted = false;
     jumpingAnimationCompleted = false;
     canJump = true;
     isMovementBlocked = false;
     firstMetEndboss = false;
+    isLeftOfEndboss = true;
+    transitioning = false;
+    isLeftOfEndboss = true;
 
 
     offset = {
@@ -121,7 +127,7 @@ class Character extends MovableObject {
                 }, 1500);
             }
 
-            this.world.camera_x = -this.x + 100;
+            this.updateCameraPosition();
         }, 1000 / 60);
 
         setInterval(() => {
@@ -162,6 +168,38 @@ class Character extends MovableObject {
                 this.playAnimation(this.IMAGES_IDLE);
             }
         }, 200);
+    }
+    
+    updateCameraPosition() {
+        let endbossX = this.world.level.enemies.find(enemy => enemy instanceof Endboss)?.x || 0;
+        let characterX = this.x;
+    
+        // Prüfen, ob der Charakter links oder rechts vom Endboss ist
+        let isCurrentlyLeftOfEndboss = characterX < endbossX;
+    
+        // Falls der Character die Seite wechselt (rechts nach links oder links nach rechts)
+        if (isCurrentlyLeftOfEndboss !== this.isLeftOfEndboss) {
+            this.transitioning = true; // Startet eine neue Transition
+            this.isLeftOfEndboss = isCurrentlyLeftOfEndboss; // Aktualisiert die Position des Charakters relativ zum Endboss
+        }
+    
+        // Zielposition der Kamera abhängig von der relativen Position zum Endboss
+        let targetCameraX = isCurrentlyLeftOfEndboss ? -characterX + 100 : -characterX + 400;
+    
+        // Führe eine sanfte Transition durch, wenn eine Transition aktiv ist
+        if (this.transitioning) {
+            this.world.camera_x += (targetCameraX - this.world.camera_x) * this.cameraSpeed;
+    
+            // Wenn die Kamera nahe genug an der Zielposition ist, beende die Transition
+            if (Math.abs(targetCameraX - this.world.camera_x) < 5) {
+                this.world.camera_x = targetCameraX; // Setze die Kamera exakt auf das Ziel
+                this.transitioning = false; // Beende die Transition
+                console.log('Transition abgeschlossen');
+            }
+        } else {
+            // Falls keine Transition aktiv ist, bleibt die Kamera fixiert auf der aktuellen Position
+            this.world.camera_x = targetCameraX;
+        }
     }
 
     isAboveEnemy(enemy) {

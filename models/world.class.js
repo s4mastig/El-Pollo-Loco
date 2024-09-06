@@ -9,6 +9,7 @@ class World {
     statusBar = new StatusBar();
     statusBarCoins = new StatusBarCoins();
     statusBarBottles = new StatusBarBottles();
+    statusBarEndboss = new StatusBarEndboss();
     throwableObjects = [];
     collectedCoins = 0;
     collectedBottles = 0;
@@ -68,6 +69,7 @@ class World {
                     this.character.firstMetEndboss = true;
                 }
             }
+
             if (this.character.isColliding(enemy) && !enemy.isDead()) {
                 if (this.character.isAboveEnemy(enemy) && !(enemy instanceof Endboss)) {
                     this.character.setAboveEnemyState(true);
@@ -85,6 +87,10 @@ class World {
             this.throwableObjects.forEach((bottle) => {  // Überprüfe jede Flasche auf Kollision
                 if (bottle.isColliding(enemy)) {
                     enemy.hit(); // Huhn als getroffen markieren
+                    if (enemy instanceof Endboss) {
+                        console.log(`Updating Endboss status bar with energy: ${enemy.energy}`);
+                        this.statusBarEndboss.setPercentage(enemy.energy);
+                    }
                 }
             });
         })
@@ -127,6 +133,9 @@ class World {
         this.addToMap(this.statusBar);
         this.addToMap(this.statusBarCoins);
         this.addToMap(this.statusBarBottles);
+        if (this.statusBarEndboss.visible) {
+            this.addToMap(this.statusBarEndboss);
+        }
         this.ctx.translate(this.camera_x, 0)
         this.addToMap(this.character);
         this.addObjectsToMap(this.level.enemies);
