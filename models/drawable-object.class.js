@@ -29,7 +29,7 @@ class DrawableObject {
     }
 
     drawFrame(ctx) {
-        if (this instanceof Character || this instanceof Chicken || this instanceof Endboss || this instanceof ThrowableObject) {
+        if (this instanceof Character || this instanceof Chicken || this instanceof SmallChicken || this instanceof Endboss || this instanceof ThrowableObject) {
             ctx.beginPath();
             ctx.lineWidth = '10';
             ctx.strokeStyle = 'blue';
@@ -39,7 +39,7 @@ class DrawableObject {
     }
 
     drawFrameOffset(ctx) {
-        if (this instanceof Character || this instanceof Chicken || this instanceof Endboss || this instanceof ThrowableObject || this instanceof Coin) {
+        if (this instanceof Character || this instanceof Chicken || this instanceof SmallChicken || this instanceof Endboss || this instanceof ThrowableObject || this instanceof Coin || this instanceof BackgroundObject) {
             ctx.beginPath();
             ctx.lineWidth = '2'; // Anpassung der Linienstärke für eine präzisere Darstellung
             ctx.strokeStyle = 'red';

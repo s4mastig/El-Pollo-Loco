@@ -5,5 +5,6 @@ class Keaboard {
     DOWN = false;
     SPACE = false;
     D = false;
+    canJump = true;
 }
 

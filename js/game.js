@@ -22,6 +22,7 @@ window.addEventListener("keydown", (event) => {
     }
     if (event.code === 'Space') {
         keyboard.SPACE = true;
+        console.log(keyboard.canJump);
     }
     if (event.key === 'd' || event.key === 'D') {
         keyboard.D = true;
@@ -43,6 +44,8 @@ window.addEventListener("keyup", (event) => {
     }
     if (event.code === 'Space') {
         keyboard.SPACE = false;
+        keyboard.canJump = true;
+        console.log(keyboard.canJump);
     }
     if (event.key === 'd' || event.key === 'D') {
         keyboard.D = false;

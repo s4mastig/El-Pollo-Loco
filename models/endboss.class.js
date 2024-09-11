@@ -7,7 +7,7 @@ class Endboss extends MovableObject {
 
     offset = {
         top: 80,
-        bottom: 20,
+        bottom: 80,
         left: 20,
         right: 20
     }
@@ -37,12 +37,19 @@ class Endboss extends MovableObject {
         'img/4_enemie_boss_chicken/4_hurt/G23.png'
     ];
 
+    IMAGES_DEAD = [
+        'img/4_enemie_boss_chicken/5_dead/G24.png',
+        'img/4_enemie_boss_chicken/5_dead/G25.png',
+        'img/4_enemie_boss_chicken/5_dead/G26.png'
+    ];
+
     constructor() {
         super().loadImage(this.IMAGES_ALERT[0]);
         this.loadImages(this.IMAGES_ALERT);
         this.loadImages(this.IMAGES_ATTACK);
         this.loadImages(this.IMAGES_HURT);
-        this.x = 2500;
+        this.loadImages(this.IMAGES_DEAD);
+        this.x = 7800;
         this.applyGravity(55);
         this.alertAnimationStarted = false;
     }
@@ -68,44 +75,50 @@ class Endboss extends MovableObject {
     animateAttack() {
         setInterval(() => {
             this.world.statusBarEndboss.visible = true;
-            this.playAnimation(this.IMAGES_ATTACK);
-        }, 150);
+            if (!this.isHurt() && !this.isDead()) {
+                this.playAnimation(this.IMAGES_ATTACK);
+            }
+        }, 200);
 
         this.moveDuringAttack();
     }
 
     moveDuringAttack() {
         setInterval(() => {
-            if (!this.isHurt()) {
+            if (!this.isHurt() && !this.isDead()) {
                 this.adjustDirection();
                 this.moveInJumps();
             }
-
+            }, 600);
+        
+        setInterval(() => {     
             if (this.isHurt()) {
                 this.playAnimation(this.IMAGES_HURT);
+            } else if (this.isDead()) {
+                this.playAnimation(this.IMAGES_DEAD);
             }
-        }, 600);
+        }, 125);
 
     }
 
-        adjustDirection() {
-            if (this.world.character.x < this.x) {
-                // Character ist links vom Endboss
-                this.otherDirection = false; // Setzt die Richtung des Endbosses auf links
-            } else {
-                // Character ist rechts vom Endboss
-                this.otherDirection = true; // Setzt die Richtung des Endbosses auf rechts
-            }
+    adjustDirection() {
+        if (this.world.character.x < this.x) {
+            // Character ist links vom Endboss
+            this.otherDirection = false; // Setzt die Richtung des Endbosses auf links
+        } else {
+            // Character ist rechts vom Endboss
+            this.otherDirection = true; // Setzt die Richtung des Endbosses auf rechts
+        }
+    }
+
+    moveInJumps() {
+        let jumpDistance = 130;  // Distanz pro Sprung nach links
+
+        if (this.otherDirection) {
+            this.x += jumpDistance; // Bewegt den Endboss nach links, wenn `otherDirection` wahr ist
+        } else {
+            this.x -= jumpDistance; // Bewegt den Endboss nach rechts, wenn `otherDirection` falsch ist
         }
 
-        moveInJumps() {
-            let jumpDistance = 70;  // Distanz pro Sprung nach links
-
-            if (this.otherDirection) {
-                this.x += jumpDistance; // Bewegt den Endboss nach links, wenn `otherDirection` wahr ist
-            } else {
-                this.x -= jumpDistance; // Bewegt den Endboss nach rechts, wenn `otherDirection` falsch ist
-            }
-
-        }
+    }
 }

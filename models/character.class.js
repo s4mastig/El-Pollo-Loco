@@ -4,19 +4,20 @@ class Character extends MovableObject {
     width = 150;
     y = 128;
     world;
-    speed = 10;
+    speed = 5;
 
     cameraOffset = 100; // Standard Offset
     cameraSpeed = 0.01; // Geschwindigkeit der Kamerabewegung
 
     jumpingAnimationStarted = false;
     jumpingAnimationCompleted = false;
-    canJump = true;
     isMovementBlocked = false;
     firstMetEndboss = false;
-    isLeftOfEndboss = true;
     transitioning = false;
     isLeftOfEndboss = true;
+    isRightOfEndboss = false;
+    isThrowing = false;
+    currentTransitionDirection = 'rightToLeft';
 
 
     offset = {
@@ -86,6 +87,11 @@ class Character extends MovableObject {
         'img/2_character_pepe/1_idle/long_idle/I-20.png'
     ];
 
+    IMAGES_THROW = [
+        'img/2_character_pepe/2_walk/W-23.png'
+    ];
+
+
     walking_sound = new Audio('audio/running.mp3');
 
 
@@ -97,6 +103,7 @@ class Character extends MovableObject {
         this.loadImages(this.IMAGES_HURT);
         this.loadImages(this.IMAGES_IDLE);
         this.loadImages(this.IMAGES_SLEEP);
+        this.loadImages(this.IMAGES_THROW);
         this.applyGravity(128);
         this.animate();
     }
@@ -106,25 +113,43 @@ class Character extends MovableObject {
             this.walking_sound.pause();
             if (this.world.keyboard.RIGHT && this.x < this.world.level.level_end_x && !this.isMovementBlocked) {
                 this.moveRight();
+                this.world.level.backgroundObjects.forEach(backgroundObject => {
+                    backgroundObject.checkIfMoving('right');
+                });
                 this.otherDirection = false;
                 this.walking_sound.play();
+            } else if ((this.world.keyboard.RIGHT && this.x >= this.world.level.level_end_x) || this.isMovementBlocked) {
+                this.world.level.backgroundObjects.forEach(backgroundObject => {
+                    backgroundObject.checkIfMoving('noMovement');
+                });
             }
 
             if (this.world.keyboard.LEFT && this.x > 0 && !this.isMovementBlocked) {
                 this.moveLeft();
+                this.world.level.backgroundObjects.forEach(backgroundObject => {
+                    backgroundObject.checkIfMoving('left');
+                });
                 this.otherDirection = true;
                 this.walking_sound.play();
+            } else if (this.world.keyboard.LEFT && this.x <= 0) {
+                this.world.level.backgroundObjects.forEach(backgroundObject => {
+                    backgroundObject.checkIfMoving('noMovement');
+                });
             }
 
-            if (this.world.keyboard.SPACE && !this.isAboveGround(128) && this.canJump && !this.isMovementBlocked) {
+            if (!this.world.keyboard.LEFT && !this.world.keyboard.RIGHT) {
+                this.world.level.backgroundObjects.forEach(backgroundObject => {
+                    backgroundObject.checkIfMoving('noMovement');
+                });
+            }
+
+            if (this.world.keyboard.SPACE && !this.isAboveGround(128) && !this.isMovementBlocked && this.world.keyboard.canJump) {
+                console.log("Jump initiated");
                 this.currentImage = 0;
-                this.jump();
+                this.jump(30);
+                keyboard.canJump = false;
                 this.jumpingAnimationStarted = true;
                 this.jumpingAnimationCompleted = false;
-                this.canJump = false;
-                setTimeout(() => {
-                    this.canJump = true;
-                }, 1500);
             }
 
             this.updateCameraPosition();
@@ -145,17 +170,22 @@ class Character extends MovableObject {
         }, 50);
 
         setInterval(() => {
-            if (this.isSmallJumping) {
+            if (this.isSmallJumping && !this.isThrowing) {
                 this.playAnimation(this.IMAGES_JUMPING.slice(2));
                 this.isSmallJumping = false;
                 console.log('Playing small JUMPING animation')
-            } else if (this.jumpingAnimationStarted && !this.jumpingAnimationCompleted && !this.isHurt() && !this.isMovementBlocked) {
+            } else if (this.jumpingAnimationStarted && !this.jumpingAnimationCompleted && !this.isHurt() && !this.isMovementBlocked && !this.isThrowing) {
                 console.log('Playing JUMPING animation');
                 this.playAnimation(this.IMAGES_JUMPING);
                 if (!this.isAboveGround(128)) {
                     this.jumpingAnimationCompleted = true;
                     this.jumpingAnimationStarted = false;
                 }
+            } else if (this.isThrowing) {
+                this.playAnimation(this.IMAGES_THROW);
+                setTimeout(() => {
+                    this.isThrowing = false;
+                }, 200);
             }
         }, 200);
 
@@ -163,44 +193,94 @@ class Character extends MovableObject {
         setInterval(() => {
             if (this.isSleeping()) {
                 this.playAnimation(this.IMAGES_SLEEP);
-            } else if (this.isIdle() && !this.isAboveGround(128)) {
+            } else if (this.isIdle() && !this.isAboveGround(128) && !this.isHurt() && !this.isDead() && !this.isThrowing) {
                 console.log('Playing IDLE animation');
                 this.playAnimation(this.IMAGES_IDLE);
+                this.world.level.backgroundObjects.forEach(backgroundObject => {
+                    backgroundObject.checkIfMoving('noMovement');
+                });
+            } else if (this.isIdle() && this.isHurt()) {
+                this.world.level.backgroundObjects.forEach(backgroundObject => {
+                    backgroundObject.checkIfMoving('noMovement');
+                });
             }
         }, 200);
     }
-    
+
     updateCameraPosition() {
-        let endbossX = this.world.level.enemies.find(enemy => enemy instanceof Endboss)?.x || 0;
+        let endboss = this.world.level.enemies.find(enemy => enemy instanceof Endboss);
+        let endbossX = endboss.x;
+        let endbossWidth = 250; // Breite des Endbosses
         let characterX = this.x;
-    
-        // Prüfen, ob der Charakter links oder rechts vom Endboss ist
+        let characterWidth = 150; // Breite des Charakters
+
+        // Berechnung der rechten Ränder des Endbosses und des Charakters
+        let endbossRight = endbossX + endbossWidth;
+        let characterRight = characterX + characterWidth;
+
+        // Prüfen, ob der Charakter vollständig rechts vom Endboss ist
+        let isCurrentlyRightOfEndboss = characterRight > endbossRight;
+        // Prüfen, ob der Charakter vollständig links vom Endboss ist
         let isCurrentlyLeftOfEndboss = characterX < endbossX;
-    
-        // Falls der Character die Seite wechselt (rechts nach links oder links nach rechts)
-        if (isCurrentlyLeftOfEndboss !== this.isLeftOfEndboss) {
-            this.transitioning = true; // Startet eine neue Transition
-            this.isLeftOfEndboss = isCurrentlyLeftOfEndboss; // Aktualisiert die Position des Charakters relativ zum Endboss
+
+        // Überprüfen, ob der Charakter von rechts nach links überholt wurde
+        if (!this.isRightOfEndboss && isCurrentlyRightOfEndboss) {
+            // Von links nach rechts überholt
+            this.isLeftOfEndboss = false;
+            this.isRightOfEndboss = true;
+            this.currentTransitionDirection = 'leftToRight';
+            this.transitioning = true;
+        } else if (!this.isLeftOfEndboss && isCurrentlyLeftOfEndboss) {
+            // Von rechts nach links überholt
+            this.isLeftOfEndboss = true;
+            this.isRightOfEndboss = false;
+            this.currentTransitionDirection = 'rightToLeft';
+            this.transitioning = true;
         }
-    
-        // Zielposition der Kamera abhängig von der relativen Position zum Endboss
-        let targetCameraX = isCurrentlyLeftOfEndboss ? -characterX + 100 : -characterX + 400;
-    
-        // Führe eine sanfte Transition durch, wenn eine Transition aktiv ist
+
+        // Berechnung der Zielposition der Kamera
+        let targetCameraX;
+
+        let minCameraX = -characterX + 100;
+        let maxCameraX = -characterX + 470;
+
+        // Kamera-Position in den erlaubten Bereich begrenzen (clamping)
+        if (this.world.camera_x < minCameraX) {
+            this.world.camera_x = minCameraX;
+        } else if (this.world.camera_x > maxCameraX) {
+            this.world.camera_x = maxCameraX;
+        }
+
+        // Wenn eine Transition stattfindet
+        if (this.transitioning) {
+            if (this.currentTransitionDirection === 'leftToRight') {
+                targetCameraX = -characterX + 470;
+            } else if (this.currentTransitionDirection === 'rightToLeft') {
+                targetCameraX = -characterX + 100;
+            }
+        } else {
+            // Wenn keine Transition stattfindet, fixiere die Kamera auf den Charakter
+            targetCameraX = -characterX + (this.isRightOfEndboss ? 470 : 100);
+        }
+
+        // Kamera-Update
         if (this.transitioning) {
             this.world.camera_x += (targetCameraX - this.world.camera_x) * this.cameraSpeed;
-    
-            // Wenn die Kamera nahe genug an der Zielposition ist, beende die Transition
+
+            // Überprüfen, ob die Kamera nahe genug an der Zielposition ist
             if (Math.abs(targetCameraX - this.world.camera_x) < 5) {
-                this.world.camera_x = targetCameraX; // Setze die Kamera exakt auf das Ziel
-                this.transitioning = false; // Beende die Transition
+                this.world.camera_x = targetCameraX;
+                this.transitioning = false;
                 console.log('Transition abgeschlossen');
             }
         } else {
-            // Falls keine Transition aktiv ist, bleibt die Kamera fixiert auf der aktuellen Position
             this.world.camera_x = targetCameraX;
         }
+
+        // Konsolenausgaben zur Überprüfung
+        console.log('Transition:', this.transitioning);
     }
+
 
     isAboveEnemy(enemy) {
         return this.y + this.height > enemy.y &&

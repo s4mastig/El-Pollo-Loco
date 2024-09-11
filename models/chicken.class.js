@@ -4,7 +4,7 @@ class Chicken extends MovableObject {
     width = 90;
     y = 332;
     energy = 4;
-    hasBeenRemoved = false;
+    
 
     offset = {
         top: 5,
@@ -27,10 +27,7 @@ class Chicken extends MovableObject {
         super().loadImage('img/3_enemies_chicken/chicken_normal/1_walk/1_w.png');
         this.loadImages(this.IMAGES_WALKING);
         this.loadImages(this.IMAGES_DEAD);
-
-        this.x = 700 + Math.random() * 500; // zufällige Zahl zwischen 0 und 1 * 500 -> Zahl zwischen 200 und 700
-        this.speed = 0.15 + Math.random() * 0.5;
-
+        this.speed = 1.2;
         this.animate();
     }
 

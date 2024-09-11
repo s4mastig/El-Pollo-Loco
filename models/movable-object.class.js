@@ -8,6 +8,7 @@ class MovableObject extends DrawableObject {
     lastIdleTime = 0;
     sleepThreshold = 7000;
     listOfObjects;
+    hasBeenRemoved = false;
 
     offset = {
         top: 0,
@@ -44,9 +45,13 @@ class MovableObject extends DrawableObject {
             this.y + this.offset.top < mo.y + mo.height - mo.offset.bottom;
     }
 
-    hit() {
-        if (!this.isInvulnerable()) {
-            this.energy -= 5;
+    hit(invulnerabilityDuration) {
+        if (!this.isInvulnerable(invulnerabilityDuration)) {
+            if (this instanceof Endboss) {
+                this.energy -= 20;
+            } else {  
+                this.energy -= 5;
+            }
             if (this.energy < 0) {
                 this.energy = 0;
             } else {
@@ -61,10 +66,10 @@ class MovableObject extends DrawableObject {
         return timePassed < 1; // only if timePassed < 5s isHurt = true;
     }
 
-    isInvulnerable() {
+    isInvulnerable(invulnerabilityDuration) {
         let timePassed = new Date().getTime() - this.lastHit; // Unterschied in ms
         timePassed = timePassed / 1000; // Unterschied in s
-        return timePassed < 0.2; // nur wenn timePassed < 1s ist invulnerable = true;
+        return timePassed < invulnerabilityDuration; // nur wenn timePassed < 1s ist invulnerable = true;
     }
 
     isDead() {
@@ -105,12 +110,11 @@ class MovableObject extends DrawableObject {
         this.currentImage++;
     }
 
-    jump() {
-        this.speedY = 30;
+    jump(speedY) {
+        this.speedY = speedY;
     }
 
     smallJump() {
-
     this.speedY = 15; // Oder ein anderer Wert für den kleinen Sprung
     setTimeout(() => {
         this.setAboveEnemyState(false); // Flagge zurücksetzen
